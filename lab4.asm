@@ -79,16 +79,22 @@ input:
 			input_iterate_string:
 				lb $t2, string($t1)
 				addiu $t1, $t1, 1
-				beqz $t2, input_enter_string # char is a null
-				nop
 				bgtu $t2, 32, input_iterate_string_character # char is a regular character
 				nop
 				input_iterate_string_delimeter:
 					# push \0 onto the stack
 					addi $sp, $sp, -1
 					sb $zero, 0($sp)
-					j input_iterate_string
-					nop
+					# look ahead until you find a next regular character
+					input_iterate_string_delimeter_lookahead:
+						lb $t2, string($t1)
+						bgtu $t2, 32, input_iterate_string # char is a regular character again
+						nop
+						addiu $t1, $t1, 1
+						beqz $t2, input_enter_string # char is a null
+						nop
+						j input_iterate_string_delimeter_lookahead
+						nop
 				input_iterate_string_character:
 					# push char onto the stack
 					addi $sp, $sp, -1
