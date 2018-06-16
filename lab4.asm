@@ -75,6 +75,7 @@ input:
 			lw $a1, string_length
 			syscall
 			li $t1, 0 # initialize the string iterator
+			li $t3, 0 # initialize the regular character occurence flag (0 - no char yet, 1 - char occured)
 			addiu $t0, $t0, 1
 			input_iterate_string:
 				lb $t2, string($t1)
@@ -82,9 +83,12 @@ input:
 				bgtu $t2, 32, input_iterate_string_character # char is a regular character
 				nop
 				input_iterate_string_delimeter:
-					# push \0 onto the stack
+					# push \0 onto the stack only if some other regular characters have been present
+					beqz $t3, input_iterate_string_delimeter_push_null_skip
+					nop
 					addi $sp, $sp, -1
 					sb $zero, 0($sp)
+					input_iterate_string_delimeter_push_null_skip:
 					# look ahead until you find a next regular character
 					input_iterate_string_delimeter_lookahead:
 						beqz $t2, input_enter_string # char is a null
@@ -96,6 +100,7 @@ input:
 						j input_iterate_string_delimeter_lookahead
 						nop
 				input_iterate_string_character:
+					li $t3, 1 # switch the flag
 					# push char onto the stack
 					addi $sp, $sp, -1
 					sb $t2, 0($sp)
