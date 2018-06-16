@@ -10,6 +10,7 @@ enter_amount_msg: .asciiz "Enter the amount of strings: "
 enter_amount_error_msg: .asciiz "Invalid amount of strings!\n"
 enter_string_msg: .asciiz "Enter the string #"
 colon: .asciiz ": "
+result_msg: .asciiz "Result: "
 
 delimeter: .asciiz ", "
 
@@ -118,6 +119,10 @@ output:
 	move $t4, $a0 # word count
 	addi $sp, $sp, 1 # point at the last char in the stack because the last char added was \0
 	li $t1, 0 # string length
+	# print the result message
+	la $a0, result_msg
+	li $v0, 4
+	syscall
 	output_iterate_string:
 		# exit condition
 		beqz $t4, output_return # outputted all the words in the stack
