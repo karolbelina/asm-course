@@ -69,7 +69,30 @@ main:
 # a0 - cell index
 # a1 - 0 - x, 1 - o
 update_row_preference_state:
-	
+	mul $t0, $a0, 4
+	li $t1, 0 # initialize the iterator
+	update_row_preference_state_get_row:
+		# exit confition
+		beq $t1, 4, update_row_preference_state_return
+		nop
+		addi $t2, $t0, $t1 # offset
+		lb $t3, cell_to_rows($t2) # get the $t1-th row of this cell
+		bne $t3, 8, update_row_preference_state_update # row is null
+		nop
+		addi $t1, $t1, 1 # increment the iterator
+		j update_row_preference_state_get_row
+		nop
+		update_row_preference_state_update:
+			addi $t1, $t1, 1 # increment the iterator
+			# $t3 is now the row
+			lb $t4, row_preferences($t3) # the preference of the $t3-th row
+			mul $t4, $t4, 2
+			addi $t4, $t4, $a1 # add the x or o value
+			lb $t5, row_preference_state_lookup_table($t4) # new preference
+			sb $t5, row_preferences($t3) # update the preferene
+	update_row_preference_state_return:
+		jr $ra
+		nop
 
 ai_move:
 	li $v0, -1 # preferenced index, default value is -1
