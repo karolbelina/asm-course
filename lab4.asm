@@ -19,6 +19,7 @@ main:
 	jal input
 	nop
 	# run the output function
+	move $a0, $v0 # word count
 	jal output
 	nop
 	# exit
@@ -50,6 +51,7 @@ input:
 			nop
 	input_enter_strings:
 		li $t0, 0 # initialize the iterator
+		li $t4, 0 # initialize the word iterator
 		# push the initial \0 onto the stack
 		addi $sp, $sp, -1
 		sb $zero, 0($sp)
@@ -88,6 +90,7 @@ input:
 					nop
 					addi $sp, $sp, -1
 					sb $zero, 0($sp)
+					addi $t4, $t4, 1 # increment the word count
 					input_iterate_string_delimeter_push_null_skip:
 					# look ahead until you find a next regular character
 					input_iterate_string_delimeter_lookahead:
@@ -107,15 +110,17 @@ input:
 					j input_iterate_string
 					nop
 	input_return:
+		move $v0, $t4 # return the word count
 		jr $ra
 		nop
 					
 output:
+	move $t4, $a0 # word count
 	addi $sp, $sp, 1 # point at the last char in the stack because the last char added was \0
 	li $t1, 0 # string length
 	output_iterate_string:
 		# exit condition
-		bge $sp, 0x7fffeffc, output_return # read all the strings in the stack and the stack pointer is at the bottom
+		beqz $t4, output_return # outputted all the words in the stack
 		nop
 		lb $t2, 0($sp)
 		addi $sp, $sp, 1
@@ -140,6 +145,7 @@ output:
 				nop
 			output_print_string_delimeter:
 				move $sp, $t0 # point at the next string on the stack
+				addi $t4, $t4, -1 # decrease the remaining word count
 				# print the delimeter
 				la $a0, delimeter
 				li $v0, 4
