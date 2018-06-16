@@ -87,12 +87,12 @@ input:
 					sb $zero, 0($sp)
 					# look ahead until you find a next regular character
 					input_iterate_string_delimeter_lookahead:
+						beqz $t2, input_enter_string # char is a null
+						nop
 						lb $t2, string($t1)
 						bgtu $t2, 32, input_iterate_string # char is a regular character again
 						nop
 						addiu $t1, $t1, 1
-						beqz $t2, input_enter_string # char is a null
-						nop
 						j input_iterate_string_delimeter_lookahead
 						nop
 				input_iterate_string_character:
@@ -106,7 +106,7 @@ input:
 		nop
 					
 output:
-	addi $sp, $sp, 1 # point at the last char in the stack
+	addi $sp, $sp, 1 # point at the last char in the stack because the last char added was \0
 	li $t1, 0 # string length
 	output_iterate_string:
 		# exit condition
@@ -118,28 +118,28 @@ output:
 		bnez $t2, output_iterate_string # search the null char code
 		nop
 		# char is null
-		addi $t0, $sp, 1 # store the pointer to the next string on the stack
+		addi $t0, $sp, 0 # store the pointer to the next string on the stack
 		addi $t1, $t1, -1 # decrement length
 		addi $sp, $sp, -2 # initialize the stack pointer to point at the first char of the read string
 		output_print_string:
-			lb $t3, 0($sp)
-			addi $sp, $sp, -1
-			bnez $t3, output_print_string_char
+			beqz $t1, output_print_string_delimeter # check if remaining lenght is 0
 			nop
-			output_print_string_null: # char is null
+			output_print_string_character:
+				# print the character
+				lb $a0, 0($sp)
+				li $v0, 11
+				syscall
+				addi $sp, $sp, -1
+				addi $t1, $t1, -1
+				j output_print_string
+				nop
+			output_print_string_delimeter:
 				move $sp, $t0 # point at the next string on the stack
 				# print the delimeter
 				la $a0, delimeter
 				li $v0, 4
 				syscall
 				j output_iterate_string
-				nop
-			output_print_string_char:
-				# print char
-				move $a0, $t3
-				li $v0, 11
-				syscall
-				j output_print_string
 				nop
 	output_return:
 		jr $ra
