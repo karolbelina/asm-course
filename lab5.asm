@@ -2,10 +2,6 @@
 # labs #5
 # tic tac toe
 
-# X X O 
-# X _ 0 
-# _ 0 X 
-
 .data
 # 0 is empty, 1 is player, 2 is ai
 # 0 1 2
@@ -18,27 +14,6 @@ board: .byte 1,1,0,2,1,2,0,0,1
 # 0 for neutral, 1 and 2 for player, 3 and 4 for ai, 5 for wasted
 row_preferences: .space 8 
 
-#top: .byte 0, 1, 2
-#middle: .byte 3, 4, 5
-#bottom: .byte 6, 7, 8
-#left: .byte 0, 3, 6
-#center: .byte 1, 4, 7
-#right: .byte 2, 5, 8
-#diagonal: .byte 0, 4, 8
-#backdiagonal: .byte 2, 4, 6
-
-# 0 --x-> 1
-# 0 --o-> 3
-# 1 --x-> 2
-# 1 --o-> 5
-# 2 --x-> x's win
-# 2 --o-> 5
-# 3 --x-> 5
-# 3 --o-> 4
-# 4 --x-> 5
-# 4 --o-> o's win
-# 5 --x-> 5
-# 5 --o-> 5
 #                                        0x 0o 1x 1o 2x 2o 3x 3o 4x 4o 5x 5o
 row_preference_state_lookup_table: .byte 1, 3, 2, 5, 6, 5, 5, 4, 5, 7, 5, 5
 
@@ -65,9 +40,6 @@ x_win: .asciiz "X's win!\n"
 o_win: .asciiz "O's win!\n"
 score_msg: .asciiz "Final scores: "
 dash: .asciiz "-"
-
-debug_space: .asciiz " "
-debug_msg: .asciiz "Turn number: "
 
 .text
 main:
@@ -360,34 +332,49 @@ player_move:
 		nop
 
 ai_move:
-	check_for_lethal: # check for 2s or -2s
+	ai_move_attack: # check for 4s
 		li $t0, 0 # initialize the iterator (0-7)
-		check_for_lethal_row:
-			lb $t1, row_preferences($t0) # get the preference of the row
-			beq $t1, 4, check_for_lethal_found
+		ai_move_attack_loop:
+			# exit condition
+			beq $t0, 8, ai_move_defend
 			nop
-			beq $t1, 2, check_for_lethal_found
+			# get the preference of the row
+			lb $t1, row_preferences($t0)
+			beq $t1, 4, ai_move_lethal_found # check for 4
 			nop
-			# didn't found 2 or -2
+			# didn't found 4
 			addiu $t0, $t0, 1
-			blt $t0, 8, check_for_lethal_row
+			j ai_move_attack_loop
 			nop
-			# found the 2 or -2, exit
-			check_for_lethal_found:
-				# get the only empty cell of row in $t0
-				mul $t0, $t0, 3 # multiply times 3 for row_to_cells lookup
-				lb $v0, row_to_cells+0($t0)
-				lb $t2, board($v0)
-				beqz $t2, ai_move_return
-				nop
-				lb $v0, row_to_cells+1($t0)
-				lb $t2, board($v0)
-				beqz $t2, ai_move_return
-				nop
-				lb $v0, row_to_cells+2($t0)
-				lb $t2, board($v0)
-				beqz $t2, ai_move_return
-				nop
+	ai_move_defend: # check for 2s
+		li $t0, 0 # initialize the iterator (0-7)
+		ai_move_defend_loop:
+			# exit condition
+			beq $t0, 8, random_cell
+			nop
+			# get the preference of the row
+			lb $t1, row_preferences($t0)
+			beq $t1, 2, ai_move_lethal_found # check for 2
+			nop
+			# didn't found 2
+			addiu $t0, $t0, 1
+			j ai_move_defend_loop
+			nop
+	ai_move_lethal_found:
+		# get the only empty cell of row in $t0
+		mul $t0, $t0, 3 # multiply times 3 for row_to_cells lookup
+		lb $v0, row_to_cells+0($t0)
+		lb $t2, board($v0)
+		beqz $t2, ai_move_return
+		nop
+		lb $v0, row_to_cells+1($t0)
+		lb $t2, board($v0)
+		beqz $t2, ai_move_return
+		nop
+		lb $v0, row_to_cells+2($t0)
+		lb $t2, board($v0)
+		beqz $t2, ai_move_return
+		nop
 	random_cell:
 		# generate a random integer between 0 and 7
 		li $a0, 0
