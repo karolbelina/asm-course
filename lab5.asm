@@ -63,8 +63,11 @@ invalid_index_msg: .asciiz "Invalid cell index!\n"
 tie: .asciiz "Tie!\n"
 x_win: .asciiz "X's win!\n"
 o_win: .asciiz "O's win!\n"
+score_msg: .asciiz "Final scores: "
+dash: .asciiz "-"
 
 debug_space: .asciiz " "
+debug_msg: .asciiz "Turn number: "
 
 .text
 main:
@@ -101,7 +104,7 @@ game:
 		li $s3, 0 # initialize the o's wins
 		game_match:
 			# exit condition
-			beq $s1, $s0, game_return
+			beq $s1, $s0, game_print_scores
 			# print the match messaage
 			la $a0, start_match_msg
 			li $v0, 4
@@ -132,16 +135,16 @@ game:
 			lw $s1, 8($sp)
 			lw $s2, 12($sp)
 			lw $s3, 16($sp)
-			addi $sp, $sp, 12
-			add $s2, $s2, $v0 # add x's win
-			add $s3, $s3, $v1 # add x's win
+			addi $sp, $sp, 20
 			addi $s1, $s1, 1 # increment the iterator
+			add $s2, $s2, $v0 # add x's win
+			add $s3, $s3, $v1 # add o's win
 			# display the win message
 			or $t1, $v0, $v1
 			beqz $t1, game_match_result_tie # tie
 			nop
 			# not a tie
-			beqz $v0, game_match_result_o_won # o's wom
+			beqz $v0, game_match_result_o_won # o's won
 			nop
 			game_match_result_x_won:
 				la $a0, x_win
@@ -161,24 +164,56 @@ game:
 				syscall
 				j game_match
 				nop
+	game_print_scores:
+		# print the score messaage
+		la $a0, score_msg
+		li $v0, 4
+		syscall
+		# print the x's score
+		move $a0, $s2
+		li $v0, 1
+		syscall
+		# print the dash
+		la $a0, dash
+		li $v0, 4
+		syscall
+		# print the o's score
+		move $a0, $s3
+		li $v0, 1
+		syscall
+		# print the newline
+		la $a0, newline
+		li $v0, 4
+		syscall
 	game_return:
 		jr $ra
 		nop
 		
 match:
-	addi $sp, $sp, 4
+	addi $sp, $sp, -4
 	sw $ra, 0($sp) # store return address
 	li $t0, 0 # initialize the clear board iterator
+	li $t1, 0 # initialize the clear preferences iterator
 	match_clear_board:
 		# exit condition
-		beq $t0, 9, match_turn
+		beq $t0, 9, match_clear_preferences
+		nop
 		sb $zero, board($t0)
 		addi $t0, $t0, 1
 		j match_clear_board
 		nop
+	match_clear_preferences:
+		# exit condition
+		beq $t1, 8, match_preturn
+		nop
+		sb $zero, row_preferences($t1)
+		addi $t1, $t1, 1
+		j match_clear_preferences
+		nop
+	match_preturn:
 	li $s0, 0 # initialize the turn number iterator
 	match_turn:
-		addi $sp, $sp, 4
+		addi $sp, $sp, -4
 		sw $s0, 0($sp) # store $s0
 		jal board_print
 		nop
@@ -195,16 +230,12 @@ match:
 		nop
 		beq $v0, 1, match_turn_x_win
 		nop
-		
-		jal debug_print_preferences
-		nop
-		
 		lw $s0, 0($sp)
-		addi $sp, $sp, -4
+		addi $sp, $sp, 4
 		beq $s0, 8, match_turn_tie # tie after 9 moves without a win
 		nop
 		addi $s0, $s0, 1 # increment the turn number
-		addi $sp, $sp, 4
+		addi $sp, $sp, -4
 		sw $s0, 0($sp) # store $s0
 		# ai move
 		jal ai_move
@@ -219,12 +250,8 @@ match:
 		nop
 		beq $v0, 1, match_turn_o_win
 		nop
-		
-		jal debug_print_preferences
-		nop
-		
 		lw $s0, 0($sp)
-		addi $sp, $sp, -4
+		addi $sp, $sp, 4
 		addi $s0, $s0, 1 # increment the turn number
 		j match_turn
 		nop
@@ -234,14 +261,24 @@ match:
 			j match_return
 			nop
 		match_turn_x_win:
+			addi $sp, $sp, 4 # pop
+			# print the board one last time
+			jal board_print
+			nop
 			li $v0, 1
 			li $v1, 0
 			j match_return
 			nop
 		match_turn_o_win:
+			addi $sp, $sp, 4 # pop
+			# print the board one last time
+			jal board_print
+			nop
 			li $v0, 0
 			li $v1, 1
 	match_return:
+		lw $ra, 0($sp)
+		addi $sp, $sp, 4
 		jr $ra
 		nop
 		
@@ -327,9 +364,9 @@ ai_move:
 		li $t0, 0 # initialize the iterator (0-7)
 		check_for_lethal_row:
 			lb $t1, row_preferences($t0) # get the preference of the row
-			beq $t1, 2, check_for_lethal_found
+			beq $t1, 4, check_for_lethal_found
 			nop
-			beq $t1, -2, check_for_lethal_found
+			beq $t1, 2, check_for_lethal_found
 			nop
 			# didn't found 2 or -2
 			addiu $t0, $t0, 1
@@ -411,28 +448,3 @@ board_print:
 	board_print_end:
 	jr $ra
 	nop
-
-debug_print_preferences:
-	li $t0, 0 # 0-7
-	debug_print_preferences_loop:
-		# exit condition
-		beq $t0, 8, debug_print_preferences_return
-		nop
-		# print the preference
-		lb $a0, row_preferences($t0)
-		li $v0, 1
-		syscall
-		# print the space
-		la $a0, debug_space
-		li $v0, 4
-		syscall
-		addi $t0, $t0, 1 # increment the iterator
-		j debug_print_preferences_loop
-		nop
-	debug_print_preferences_return:
-		# print the newline
-		la $a0, newline
-		li $v0, 4
-		syscall
-		jr $ra
-		nop
