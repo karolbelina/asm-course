@@ -337,17 +337,20 @@ ai_move:
 			nop
 			# found the 2 or -2, exit
 			check_for_lethal_found:
-			# get the only empty cell of row in $t0
-			mul $t0, $t0, 3 # multiply times 3 for row_to_cells lookup
-			lb $v0, row_to_cells+0($t0)
-			beqz $v0, ai_move_return
-			nop
-			lb $v0, row_to_cells+1($t0)
-			beqz $v0, ai_move_return
-			nop
-			lb $v0, row_to_cells+2($t0)
-			beqz $v0, ai_move_return
-			nop
+				# get the only empty cell of row in $t0
+				mul $t0, $t0, 3 # multiply times 3 for row_to_cells lookup
+				lb $v0, row_to_cells+0($t0)
+				lb $t2, board($v0)
+				beqz $t2, ai_move_return
+				nop
+				lb $v0, row_to_cells+1($t0)
+				lb $t2, board($v0)
+				beqz $t2, ai_move_return
+				nop
+				lb $v0, row_to_cells+2($t0)
+				lb $t2, board($v0)
+				beqz $t2, ai_move_return
+				nop
 	random_cell:
 		# generate a random integer between 0 and 7
 		li $a0, 0
