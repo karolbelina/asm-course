@@ -228,6 +228,9 @@ match:
 		j match_turn
 		nop
 		match_turn_tie:
+			# print the board one last time
+			jal board_print
+			nop
 			li $v0, 0
 			li $v1, 0
 			j match_return
