@@ -1,4 +1,4 @@
-# karol belina, 7th of may, 2018
+# assg0
 # introduction labs
 # exponents 2 by the specified integer and checks for the buffer overflow
 
@@ -49,21 +49,31 @@ exponentation:
 		# finish exponenting if exponent is zero
 		beq $t1, $zero, exponentation_return
 		nop
-		multu $t2, $t0 # multiply result times the base (2)
-		mflo $t2 # move lo flag back to result
-		beq $t2, $zero, exponentation_overflow # overflow occured if lo is zero
+		# multiply result times the base (2)
+		multu $t2, $t0
+		# move lo flag back to result
+		mflo $t2
+		# overflow occured if lo is zero
+		beq $t2, $zero, exponentation_overflow
 		nop
-		sub $t1, $t1, 1 # decrement exponent
-		j exponentation_loop # loop until exponent is decremented to zero
+		# decrement exponent
+		sub $t1, $t1, 1
+		# loop until exponent is decremented to zero
+		j exponentation_loop
 		nop
 	exponentation_return:
-		move $v0, $t2 # move the result to the return value 0
-		li $v1, 0 # set the return flag 1 to 0
-		jr $ra # return
+		# move the result to the return value 0
+		move $v0, $t2
+		# set the return flag 1 to 0
+		li $v1, 0
+		# return
+		jr $ra
 		nop
 	exponentation_overflow:
-		li $v1, 1 # set the return flag 1 to 1
-		jr $ra # return
+		# set the return flag 1 to 1
+		li $v1, 1
+		# return
+		jr $ra
 		nop
 
 # prints the result message, the argument a0 and terminates the program
@@ -75,7 +85,8 @@ result:
 	li $v0, 4
 	syscall
 	# print the result
-	li $v0, 36 # unsigned int
+	# unsigned int
+	li $v0, 36
 	move $a0, $t0
 	syscall
 	# exit

@@ -71,9 +71,12 @@ game:
 			j game_enter_number
 			nop
 	game_matches:
-		li $s1, 0 # initialize the iterator
-		li $s2, 0 # initialize the x's wins
-		li $s3, 0 # initialize the o's wins
+		# initialize the iterator
+		li $s1, 0
+		# initialize the x's wins
+		li $s2, 0
+		# initialize the o's wins
+		li $s3, 0
 		game_match:
 			# exit condition
 			beq $s1, $s0, game_print_scores
@@ -95,11 +98,16 @@ game:
 			syscall
 			# play the actual match
 			addi $sp, $sp, -20
-			sw $ra, 0($sp) # store return address
-			sw $s0, 4($sp) # store $s0
-			sw $s1, 8($sp) # store $s1
-			sw $s2, 12($sp) # store $s2
-			sw $s3, 16($sp) # store $s3
+			# store return address
+			sw $ra, 0($sp)
+			# store $s0
+			sw $s0, 4($sp)
+			# store $s1
+			sw $s1, 8($sp)
+			# store $s2
+			sw $s2, 12($sp)
+			# store $s3
+			sw $s3, 16($sp)
 			jal match
 			nop
 			lw $ra, 0($sp)
@@ -108,15 +116,20 @@ game:
 			lw $s2, 12($sp)
 			lw $s3, 16($sp)
 			addi $sp, $sp, 20
-			addi $s1, $s1, 1 # increment the iterator
-			add $s2, $s2, $v0 # add x's win
-			add $s3, $s3, $v1 # add o's win
+			# increment the iterator
+			addi $s1, $s1, 1
+			# add x's win
+			add $s2, $s2, $v0
+			# add o's win
+			add $s3, $s3, $v1
 			# display the win message
 			or $t1, $v0, $v1
-			beqz $t1, game_match_result_tie # tie
+			# tie
+			beqz $t1, game_match_result_tie
 			nop
 			# not a tie
-			beqz $v0, game_match_result_o_won # o's won
+			# o's won
+			beqz $v0, game_match_result_o_won
 			nop
 			game_match_result_x_won:
 				la $a0, x_win
@@ -163,9 +176,12 @@ game:
 		
 match:
 	addi $sp, $sp, -4
-	sw $ra, 0($sp) # store return address
-	li $t0, 0 # initialize the clear board iterator
-	li $t1, 0 # initialize the clear preferences iterator
+	# store return address
+	sw $ra, 0($sp)
+	# initialize the clear board iterator
+	li $t0, 0
+	# initialize the clear preferences iterator
+	li $t1, 0
 	match_clear_board:
 		# exit condition
 		beq $t0, 9, match_clear_preferences
@@ -183,10 +199,12 @@ match:
 		j match_clear_preferences
 		nop
 	match_preturn:
-	li $s0, 0 # initialize the turn number iterator
+	# initialize the turn number iterator
+	li $s0, 0
 	match_turn:
 		addi $sp, $sp, -4
-		sw $s0, 0($sp) # store $s0
+		# store $s0
+		sw $s0, 0($sp)
 		jal board_print
 		nop
 		# player move
@@ -197,18 +215,22 @@ match:
 		sb $t0, board($v0)
 		# update row preferences
 		move $a0, $v0
-		li $a1, 0 # x's
+		# x's
+		li $a1, 0
 		jal update_row_preference_state
 		nop
 		beq $v0, 1, match_turn_x_win
 		nop
 		lw $s0, 0($sp)
 		addi $sp, $sp, 4
-		beq $s0, 8, match_turn_tie # tie after 9 moves without a win
+		# tie after 9 moves without a win
+		beq $s0, 8, match_turn_tie
 		nop
-		addi $s0, $s0, 1 # increment the turn number
+		# increment the turn number
+		addi $s0, $s0, 1
 		addi $sp, $sp, -4
-		sw $s0, 0($sp) # store $s0
+		# store $s0
+		sw $s0, 0($sp)
 		# ai move
 		jal ai_move
 		nop
@@ -224,7 +246,8 @@ match:
 		nop
 		lw $s0, 0($sp)
 		addi $sp, $sp, 4
-		addi $s0, $s0, 1 # increment the turn number
+		# increment the turn number
+		addi $s0, $s0, 1
 		j match_turn
 		nop
 		match_turn_tie:
@@ -236,7 +259,8 @@ match:
 			j match_return
 			nop
 		match_turn_x_win:
-			addi $sp, $sp, 4 # pop
+			# pop
+			addi $sp, $sp, 4
 			# print the board one last time
 			jal board_print
 			nop
@@ -245,7 +269,8 @@ match:
 			j match_return
 			nop
 		match_turn_o_win:
-			addi $sp, $sp, 4 # pop
+			# pop
+			addi $sp, $sp, 4
 			# print the board one last time
 			jal board_print
 			nop
@@ -263,34 +288,46 @@ match:
 # v0 - win occured
 update_row_preference_state:
 	mul $t0, $a0, 4
-	li $t1, 0 # initialize the iterator
-	li $v0, 0 # default return value
+	# initialize the iterator
+	li $t1, 0
+	# default return value
+	li $v0, 0
 	update_row_preference_state_get_row:
 		# exit confition
 		beq $t1, 4, update_row_preference_state_return
 		nop
-		add $t2, $t0, $t1 # offset
-		lb $t3, cell_to_rows($t2) # get the $t1-th row of this cell
-		bne $t3, 8, update_row_preference_state_update # row is not null
+		# offset
+		add $t2, $t0, $t1
+		# get the $t1-th row of this cell
+		lb $t3, cell_to_rows($t2)
+		# row is not null
+		bne $t3, 8, update_row_preference_state_update
 		nop
-		addi $t1, $t1, 1 # increment the iterator
+		# increment the iterator
+		addi $t1, $t1, 1
 		j update_row_preference_state_get_row
 		nop
 		update_row_preference_state_update:
-			addi $t1, $t1, 1 # increment the iterator
+			# increment the iterator
+			addi $t1, $t1, 1
 			# $t3 is now the row
-			lb $t4, row_preferences($t3) # the preference of the $t3-th row
+			# the preference of the $t3-th row
+			lb $t4, row_preferences($t3)
 			mul $t4, $t4, 2
-			add $t4, $t4, $a1 # add the x or o value
-			lb $t5, row_preference_state_lookup_table($t4) # new preference
-			sb $t5, row_preferences($t3) # update the preferene
+			# add the x or o value
+			add $t4, $t4, $a1
+			# new preference
+			lb $t5, row_preference_state_lookup_table($t4)
+			# update the preferene
+			sb $t5, row_preferences($t3)
 			# check for win occurence
 			bge $t5, 6, update_row_preference_state_update_win_occured
 			nop
 			j update_row_preference_state_get_row
 			nop
 			update_row_preference_state_update_win_occured:
-				li $v0, 1 # return value
+				# return value
+				li $v0, 1
 			j update_row_preference_state_get_row
 			nop
 	update_row_preference_state_return:
@@ -306,13 +343,17 @@ player_move:
 		# load an integer
 		li $v0, 5
 		syscall
-		blt $v0, 1, player_move_invalid_index # < 1
+		# < 1
+		blt $v0, 1, player_move_invalid_index
 		nop
-		bgt $v0, 9, player_move_invalid_index # > 9
+		# > 9
+		bgt $v0, 9, player_move_invalid_index
 		nop
-		addi $v0, $v0, -1 # shift to proper 0-8 indexes
+		# shift to proper 0-8 indexes
+		addi $v0, $v0, -1
 		lb $t0, board($v0)
-		bnez $t0, player_move_cell_occupied # cell already occupied
+		# cell already occupied
+		bnez $t0, player_move_cell_occupied
 		nop
 		j player_move_return
 		nop
@@ -335,29 +376,35 @@ player_move:
 		nop
 
 ai_move:
-	ai_move_attack: # check for 4s
-		li $t0, 0 # initialize the iterator (0-7)
+	# check for 4s
+	ai_move_attack:
+		# initialize the iterator (0-7)
+		li $t0, 0
 		ai_move_attack_loop:
 			# exit condition
 			beq $t0, 8, ai_move_defend
 			nop
 			# get the preference of the row
 			lb $t1, row_preferences($t0)
-			beq $t1, 4, ai_move_lethal_found # check for 4
+			# check for 4
+			beq $t1, 4, ai_move_lethal_found
 			nop
 			# didn't found 4
 			addiu $t0, $t0, 1
 			j ai_move_attack_loop
 			nop
-	ai_move_defend: # check for 2s
-		li $t0, 0 # initialize the iterator (0-7)
+	# check for 2s
+	ai_move_defend:
+		# initialize the iterator (0-7)
+		li $t0, 0
 		ai_move_defend_loop:
 			# exit condition
 			beq $t0, 8, random_cell
 			nop
 			# get the preference of the row
 			lb $t1, row_preferences($t0)
-			beq $t1, 2, ai_move_lethal_found # check for 2
+			# check for 2
+			beq $t1, 2, ai_move_lethal_found
 			nop
 			# didn't found 2
 			addiu $t0, $t0, 1
@@ -365,7 +412,8 @@ ai_move:
 			nop
 	ai_move_lethal_found:
 		# get the only empty cell of row in $t0
-		mul $t0, $t0, 3 # multiply times 3 for row_to_cells lookup
+		# multiply times 3 for row_to_cells lookup
+		mul $t0, $t0, 3
 		lb $v0, row_to_cells+0($t0)
 		lb $t2, board($v0)
 		beqz $t2, ai_move_return
@@ -394,17 +442,22 @@ ai_move:
 		nop
 
 board_print:
-	li $t0, 0 # 0-8
+	# 0-8
+	li $t0, 0
 	board_print_collumn:
-		li $t1, 0 # 0-2
-		beq $t0, 9, board_print_end # if $t0 is equal to 9, the printing is complete
+		# 0-2
+		li $t1, 0
+		# if $t0 is equal to 9, the printing is complete
+		beq $t0, 9, board_print_end
 		board_print_row:
-			lbu $t2, board($t0) # load the current cell to $t2
+			# load the current cell to $t2
+			lbu $t2, board($t0)
 			beq $t2, 1, board_print_x
 			nop
 			beq $t2, 2, board_print_o
 			nop
-			board_print_space: # if $t2 is neither 1 or 2, print the space
+			# if $t2 is neither 1 or 2, print the space
+			board_print_space:
 				li $v0, 4
 				la $a0, _
 				syscall
@@ -423,7 +476,8 @@ board_print:
 			board_print_skip:
 			addiu $t0, $t0, 1
 			addiu $t1, $t1, 1
-			blt $t1, 3, board_print_newline_skip # if $t1 is equal to 3, print the newline and go back to print another row
+			# if $t1 is equal to 3, print the newline and go back to print another row
+			blt $t1, 3, board_print_newline_skip
 			nop
 				# print newline
 				li $v0, 4

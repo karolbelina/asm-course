@@ -3,7 +3,8 @@
 # 16-bit integer randomizer
 
 .data
-array: .space 40 # twenty two-byte (halfword) integers
+# twenty two-byte (halfword) integers
+array: .space 40
 size: .word 40
 
 comma: .asciiz ", "
