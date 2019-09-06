@@ -8,7 +8,8 @@ result_msg: .asciiz "Result = "
 overflow_msg: .asciiz "Buffer overflow"
 
 .text
-# prints the begin message, loads an integer, exponents 2 by said integer and prints the result or the buffer overflow message
+# prints the begin message, loads an integer, exponents 2 by said integer
+# and prints the result or the buffer overflow message
 main:
 	# print the begin message
 	la $a0, begin_msg
@@ -17,27 +18,36 @@ main:
 	# load an integer to t0
 	li $v0, 5
 	syscall
-	li $a0, 2 # load 2 as the argument 0
-	move $a1, $v0 # move loaded integer to the argument 1
-	jal exponentation # call the exponentation function
+	# load 2 as the argument 0
+	li $a0, 2
+	# move loaded integer to the argument 1
+	move $a1, $v0
+	# call the exponentation function
+	jal exponentation
 	nop
 	# store return values
 	move $t0, $v0
 	move $t1, $v1
-	bnez $t1, overflow # if an overflow occured call the final overflow function
+	# if an overflow occured call the final overflow function
+	bnez $t1, overflow
 	nop
-	move $a0, $t0 # move the result to the argument 0
-	j result # call the final result function
+	# move the result to the argument 0
+	move $a0, $t0
+	# call the final result function
+	j result
 	nop
 
-# exponents the base a0 by the exponent a1, puts the result in v0 and and 1 in v1 if an overflow occurs
+# exponents the base a0 by the exponent a1, puts the result in v0
+# and the value 1 in v1 if an overflow occurs
 exponentation:
 	# load arguments
 	move $t0, $a0
 	move $t1, $a1
-	li $t2, 1 # initialize the result
+	# initialize the result
+	li $t2, 1
 	exponentation_loop:
-		beq $t1, $zero, exponentation_return # finish exponenting if exponent is zero
+		# finish exponenting if exponent is zero
+		beq $t1, $zero, exponentation_return
 		nop
 		multu $t2, $t0 # multiply result times the base (2)
 		mflo $t2 # move lo flag back to result
